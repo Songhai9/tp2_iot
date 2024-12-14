@@ -12,53 +12,37 @@
 #define PORT_SENDER 1111
 #define PORT_RECV 2222
 
-/*---------------------------------------------------------------------------*/
 PROCESS(udp_receiver, "Receiver UDP");
 AUTOSTART_PROCESSES(&udp_receiver);
-/*---------------------------------------------------------------------------*/
-// fonction de réception des messages
-void udp_rx_callback(struct simple_udp_connection *udp_con,
-		     const uip_ipaddr_t *src,
-		     uint16_t sport,
-		     const uip_ipaddr_t *dest,
-		     uint16_t dport,
-		     const uint8_t *data,
-		     uint16_t size)
+
+static struct simple_udp_connection udp_conn;
+
+// Callback for receiving UDP messages
+void udp_rx_callback(struct simple_udp_connection *c,
+                     const uip_ipaddr_t *src,
+                     uint16_t src_port,
+                     const uip_ipaddr_t *dest,
+                     uint16_t dest_port,
+                     const uint8_t *data,
+                     uint16_t datalen)
 {
-  LOG_INFO("PASS");
+  LOG_INFO("Received %d bytes from ", datalen);
+  LOG_INFO_6ADDR(src);
+  LOG_INFO_(": %.*s\n", datalen, (char *)data);
 }
-
-
-           //%x:%x:%x:%x:%x:%x:%x:%x", udp_con.remote_addr.u16[0], udp_con.remote_addr.u16[1],
-           //udp_con.remote_addr.u16[2] ,udp_con.remote_addr.u16[3],udp_con.remote_addr.u16[4],
-           //udp_con.remote_addr.u16[5],udp_con.remote_addr.u16[6],udp_con.remote_addr.u16[7]);
-
-
-/*---------------------------------------------------------------------------*/
-struct simple_udp_connection udp_conn;
-
 
 PROCESS_THREAD(udp_receiver, ev, data)
 {
   PROCESS_BEGIN();
 
-  uip_ip6addr_t send_ip;
-  uip_ip6addr(&send_ip, 0xfe80, 0, 0, 0, 0xf6ce, 0x3654, 0x4752, 0x8eb5);
-
-
-  LOG_INFO("UDP CONNECTION with : ");
-  LOG_INFO_6ADDR(&send_ip);
-
-   // Initialize UDP connection
+  // Initialize UDP connection
   simple_udp_register(&udp_conn,
-                     PORT_RECV,              
-                     &send_ip,                   
-                     PORT_SENDER,            
-                     udp_rx_callback);
+                      PORT_RECV,
+                      NULL,
+                      PORT_SENDER,
+                      udp_rx_callback);
 
-  LOG_INFO("PASSSSSS\n");
-    
+  LOG_INFO("UDP Receiver Initialized\n");
+
   PROCESS_END();
 }
-/*---------------------------------------------------------------------------*/
-
